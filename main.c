@@ -20,4 +20,6 @@ int main(){
 
     fclose(map);
     fclose(data);
+
+    return 0;
 }
