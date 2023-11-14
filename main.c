@@ -1,3 +1,6 @@
+#define SET_MAX_TEMP 25
+#define SET_MIN_TEMP 15
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
