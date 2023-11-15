@@ -15,7 +15,7 @@ int main()
 {
     FILE *f = open_db("sensor_db.csv", true);
     
-    sensor_id_t id = 1;
+    sensor_id_t id = 6;
     sensor_value_t v = 0.001;
     sensor_ts_t ts = time(NULL);
 

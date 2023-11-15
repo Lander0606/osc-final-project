@@ -1,6 +1,6 @@
 # Create your own targets that compile the application
 
-all:
+all: main.c sensor_db.c sensor_db.h config.h
 	gcc -g -Wall main.c sensor_db.c -o main.out
 
 run: all
