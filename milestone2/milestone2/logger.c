@@ -17,6 +17,7 @@
 #define INSERT_ERR_MSG 21
 #define CLOSE_ERR_MSG 22
 
+// Define some global variables
 int fd[2];
 uint seq_num = 0;
 pid_t pid;
