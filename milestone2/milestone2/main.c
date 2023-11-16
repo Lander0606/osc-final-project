@@ -14,7 +14,7 @@ int main()
 {
     // First test: correct use of sensor_db functions
     printf("***** TEST 1: *****\n");
-    FILE *f = open_db(NULL, true);
+    FILE *f = open_db("sensor_db.csv", true);
 
     sleep(1);
     sensor_id_t id = 1;
@@ -48,8 +48,9 @@ int main()
     // Fourth test: close a non-opened file
     printf("***** TEST 4: *****\n");
     close_db(f1);
+    sleep(2);
 
-    // Fifth test: opening a database twice and closing both
+    // Fifth test: opening a database twice and closing both: second may not open
     printf("***** TEST 5: *****\n");
     FILE * f2 = open_db("sensor_db.csv", true);
     FILE * f3 = open_db("sensor_db.csv", true);

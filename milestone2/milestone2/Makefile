@@ -5,4 +5,4 @@ run: all
 	./main.out
 
 zip:
-	zip milestone2.zp *.c *.h
+	zip milestone2.zip *.c *.h
