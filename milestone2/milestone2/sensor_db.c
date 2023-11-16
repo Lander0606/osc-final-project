@@ -1,88 +1,87 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <string.h>
 #include "sensor_db.h"
 #include "logger.h"
 
-#define SIZE 20
+// Define pipe constants
+#define SIZE 1
 #define READ_END 0
 #define WRITE_END 1
 
-int create_child();
+// Define the non-printable ASCII characters for insert and end message
+#define END_MSG 27
+#define INSERT_MSG 17
 
-pid_t pid;
 int fd[2];
 
+int create_child();
 
 int create_child() {
 
     if (pipe(fd) == -1){
-        printf("Pipe error\n");
+        printf("Pipe creation error\n");
         return 1;
     }
 
+    pid_t pid;
     pid = fork();
 
-    if (pid < 0) {
+    if (pid < 0) { // Child process creation error
+        printf("Child process creation error\n");
         return 1;
     }
-    if (pid > 0) {
-        close(fd[READ_END]);
 
-        // write "init" to process because otherwise read() in child reads incorrect data (20 bytes from fd)
-        char write_msg[SIZE] = "init";
-        write(fd[WRITE_END], write_msg, SIZE);
+    if (pid > 0) { // Parent process code
+        close(fd[READ_END]);
     }
-    else {
-        char rmsg[SIZE] = "";
-        printf("First rmsg: %s\n", rmsg);
+
+    else { // Child process code
+        char read_msg;
         close(fd[WRITE_END]);
         create_log_process();
         write_to_log_process("Data file opened.");
-        int result = read(fd[READ_END], rmsg, SIZE);
-        printf("Bytes read: %d\n", result);
-        printf("Result string: %s\n", rmsg);
-        while(strcmp(rmsg, "end") != 0) {
-            if(strcmp(rmsg, "insert") == 0)
+        read(fd[READ_END], &read_msg, SIZE);
+        while(read_msg != END_MSG) {
+            if(read_msg == INSERT_MSG)
                 write_to_log_process("Data inserted.");
-            result = read(fd[READ_END], rmsg, SIZE);
-            if(result <= 0) {
-                strcpy(rmsg, "wait");
-            } else {
-                printf("Result in loop: %d\n", result);
-            }
+            read(fd[READ_END], &read_msg, SIZE);
         }
         write_to_log_process("Data file closed.");
         end_log_process();
         close(fd[READ_END]);
         exit(EXIT_SUCCESS);
     }
+
     return 0;
+
 }
 
 FILE * open_db(char * filename, bool append) {
-    FILE *fp;
 
     create_child();
 
     if(append)
-        fp = fopen(filename, "a");
+        return fopen(filename, "a");
     else
-        fp = fopen(filename, "w");
+        return fopen(filename, "w");
 
-    return fp;
 }
 
 int insert_sensor(FILE * f, sensor_id_t id, sensor_value_t value, sensor_ts_t ts) {
-    char write_msg[SIZE] = "insert";
-    printf("Write something to child . . .\n");
-    write(fd[WRITE_END], write_msg, SIZE);
+
+    char write_msg = INSERT_MSG;
+    write(fd[WRITE_END], &write_msg, SIZE);
+
     return fprintf(f, "%d, %f, %ld\n", id, value, ts);
+
 }
 
 int close_db(FILE * f) {
-    char write_msg[SIZE] = "end";
-    write(fd[WRITE_END], write_msg, SIZE);
+
+    char write_msg = END_MSG;
+    write(fd[WRITE_END], &write_msg, SIZE);
     close(fd[WRITE_END]);
+
     return fclose(f);
+
 }
