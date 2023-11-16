@@ -29,18 +29,18 @@ int create_child() {
     if (pid > 0) {
         close(fd[READ_END]);
 
-        // write "wait" to process because otherwise read() in child reads incorrect data (20 bytes from fd)
-        char write_msg[SIZE] = "wait";
+        // write "init" to process because otherwise read() in child reads incorrect data (20 bytes from fd)
+        char write_msg[SIZE] = "init";
         write(fd[WRITE_END], write_msg, SIZE);
     }
     else {
-        char rmsg[SIZE] = "wait";
+        char rmsg[SIZE] = "";
         printf("First rmsg: %s\n", rmsg);
         close(fd[WRITE_END]);
         create_log_process();
         write_to_log_process("Data file opened.");
         int result = read(fd[READ_END], rmsg, SIZE);
-        printf("Result: %d\n", result);
+        printf("Bytes read: %d\n", result);
         printf("Result string: %s\n", rmsg);
         while(strcmp(rmsg, "end") != 0) {
             if(strcmp(rmsg, "insert") == 0)
