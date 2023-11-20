@@ -13,22 +13,27 @@
 #define OPEN_ERR_MSG 20
 #define INSERT_ERR_MSG 21
 #define CLOSE_ERR_MSG 22
+#define END_MSG 23
 
 bool child_created = false;
 int fd_write;
+FILE * fp;
 
 FILE * open_db(char * filename, bool append) {
 
     if(child_created) {
-        char write_msg = OPEN_ERR_MSG;
-        write(fd_write, &write_msg, SIZE);
-        return NULL;
+        return fp;
     } else if (filename == NULL) {
         printf("Error while opening file: invalid filename pointer\n");
         return NULL;
     }
 
-    FILE * fp;
+    fd_write = create_log_process();
+    if(fd_write < 0) {
+        printf("Error while opening file: couldn't create child\n");
+        return NULL;
+    }
+    child_created = true;
 
     if(append)
         fp = fopen(filename, "a");
@@ -36,15 +41,13 @@ FILE * open_db(char * filename, bool append) {
         fp = fopen(filename, "w");
 
     if(fp != NULL) {
-        fd_write = create_log_process();
-        if(fd_write < 0) {
-            fclose(fp);
-            return NULL;
-        }
-        child_created = true;
         char write_msg = OPEN_MSG;
         write(fd_write, &write_msg, SIZE);
     } else {
+        char write_msg = END_MSG;
+        write(fd_write, &write_msg, SIZE);
+        close(fd_write);
+        child_created = false;
         printf("Error while opening file: file open error\n");
     }
     return fp;
@@ -87,6 +90,9 @@ int close_db(FILE * f) {
     } else if (f == NULL) {
         printf("Error while closing file: invalid file pointer\n");
         return -1;
+    } else if (!child_created) {
+        printf("Error while closing file: file already closed\n");
+        return -1;
     }
 
     int result = fclose(f);
@@ -96,6 +102,7 @@ int close_db(FILE * f) {
         write(fd_write, &write_msg, SIZE);
         close(fd_write);
         child_created = false;
+        fp = NULL;
     } else if(child_created) {
         char write_msg = CLOSE_ERR_MSG;
         write(fd_write, &write_msg, SIZE);

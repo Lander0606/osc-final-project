@@ -16,6 +16,7 @@
 #define OPEN_ERR_MSG 20
 #define INSERT_ERR_MSG 21
 #define CLOSE_ERR_MSG 22
+#define END_MSG 23
 
 // Define some global variables
 int fd[2];
@@ -61,7 +62,7 @@ int create_log_process() {
         close(fd[WRITE_END]);
         read(fd[READ_END], &read_msg, SIZE);
 
-        while(read_msg != CLOSE_MSG) {
+        while(read_msg != END_MSG) {
 
             if(read_msg == INSERT_MSG)
                 write_to_log_process("Data inserted.");
@@ -73,11 +74,14 @@ int create_log_process() {
                 write_to_log_process("Error while opening file: database file already opened");
             else if(read_msg == CLOSE_ERR_MSG)
                 write_to_log_process("Error while closing file.");
+            else if(read_msg == CLOSE_MSG) {
+                write_to_log_process("Data file closed.");
+                break;
+            }
 
             read(fd[READ_END], &read_msg, SIZE);
         }
 
-        write_to_log_process("Data file closed.");
         end_log_process();
 
     }
