@@ -72,6 +72,3 @@ void* listenToSocket(void *param) {
     tcp_close(&client);
     pthread_exit(0);
 }
-
-
-
