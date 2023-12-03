@@ -4,9 +4,6 @@
 #include <unistd.h>
 #include "sbuffer.h"
 
-pthread_mutex_t mutex;
-pthread_cond_t condvar;
-
 void *writer_thread(void *argw);
 void *reader_thread(void *argr);
 
@@ -19,8 +16,6 @@ int main(int argc, char *argv[]){
     pthread_attr_t attr;
 
     pthread_attr_init(&attr);
-    pthread_mutex_init(&mutex, NULL);
-    pthread_cond_init(&condvar, NULL);
 
     pthread_create(&tid[0], &attr, writer_thread, buffer);
     pthread_create(&tid[1], &attr, reader_thread, buffer);
@@ -38,13 +33,13 @@ int main(int argc, char *argv[]){
 void *writer_thread(void *argw) {
 
     FILE * data = fopen("sensor_data", "rb");
+
     sensor_data_t *sens_data = malloc(sizeof(sensor_data_t));
     uint16_t sensor_id;
     double temperature;
     time_t timestamp;
 
-    while (!feof(data)) {
-        fread((&sensor_id), sizeof(sensor_id), 1, data);
+    while (fread((&sensor_id), sizeof(sensor_id), 1, data) != 0) {
         fread((&temperature), sizeof(temperature), 1, data);
         fread((&timestamp), sizeof(timestamp), 1, data);
 
@@ -52,7 +47,6 @@ void *writer_thread(void *argw) {
         sens_data->value = temperature;
         sens_data->ts = timestamp;
 
-        // TODO: critical section
         sbuffer_insert(argw, sens_data);
         usleep(10000);
     }
@@ -60,7 +54,6 @@ void *writer_thread(void *argw) {
     sensor_data_t *end_data = malloc(sizeof(sensor_data_t));
     end_data->id = 0;
 
-    // TODO: critical section
     sbuffer_insert(argw, end_data);
 
     fclose(data);
@@ -70,11 +63,16 @@ void *writer_thread(void *argw) {
 }
 
 void *reader_thread(void *argr) {
-    int end = 0;
 
-    while(end == 0) {
-        
+    sensor_data_t * data = malloc(sizeof(sensor_data_t));
+
+    while(sbuffer_remove(argr, data) != SBUFFER_NO_DATA) {
+        FILE * f = fopen("sensor_data_out.csv", "a'");
+        fprintf(f, "%d, %f, %ld\n", data->id, data->value, data->ts);
+        fclose(f);
+        usleep(25000);
     }
 
+    free(data);
     pthread_exit(0);
 }
