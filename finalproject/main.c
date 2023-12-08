@@ -1,8 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/types.h>
 #include <string.h>
 #include <unistd.h>
+
+#include "connmgr.h"
+#include "datamgr.h"
+#include "sensor_db.h"
+#include "sbuffer.h"
+#include "config.h"
 
 // Define message pipe constants
 #define SIZE 1
@@ -90,6 +97,13 @@ int main(int argc, char *argv[]) {
 
     }
 
-    return 0;
+    // TODO: Create threads
 
+    // TODO: wait for threads
+
+    char write_msg = END_MSG;
+    write(fd[WRITE_END], &write_msg, SIZE);
+    close(fd[WRITE_END]);
+
+    return 0;
 }
