@@ -1,5 +1,5 @@
 /**
- * \author {AUTHOR}
+ * \author Lander Van Loock
  */
 
 #ifndef _DPLIST_H_

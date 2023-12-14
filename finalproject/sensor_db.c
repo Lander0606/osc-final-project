@@ -7,19 +7,19 @@
 
 void* storageManager(void* param) {
     thread_param * params = param;
-    int fd_write = params->fd_write;
+    int fd_write_store = params->fd_write;
     sbuffer_t * buffer = params->buffer;
 
     FILE * file = fopen("data.csv", "w");
     char open_msg[SIZE] = "A new data.csv file has been created.";
-    write(fd_write, &open_msg, SIZE);
+    write(fd_write_store, &open_msg, SIZE);
 
     sensor_data_t * data = malloc(sizeof(sensor_data_t));
     sbuffer_remove(buffer, data);
 
     while(data->id != 0) {
         file = fopen("data.csv", "a");
-        insert_sensor(file, data, fd_write);
+        insert_sensor(file, data, fd_write_store);
         fclose(file);
 
         sbuffer_remove(buffer, data);
@@ -27,7 +27,7 @@ void* storageManager(void* param) {
 
     fclose(file);
     char close_msg[SIZE] = "The data.csv file has been closed.";
-    write(fd_write, &close_msg, SIZE);
+    write(fd_write_store, &close_msg, SIZE);
     free(data);
     pthread_exit(0);
 }

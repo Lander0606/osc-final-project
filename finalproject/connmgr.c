@@ -6,7 +6,7 @@
 #include "connmgr.h"
 #include "config.h"
 
-int fd_write;
+int fd_write_conn;
 sbuffer_t * buffer;
 
 void* connectionManager(void* param) {
@@ -16,7 +16,7 @@ void* connectionManager(void* param) {
 
     int MAX_CONN = params->max_conn;
     int PORT = params->port;
-    fd_write = params->fd_write;
+    fd_write_conn = params->fd_write;
     buffer = params->buffer;
 
     tcpsock_t *client[MAX_CONN];
@@ -59,7 +59,7 @@ void* listenToSocket(void *param) {
             if(logged == 0) {
                 char write_msg[SIZE];
                 sprintf(write_msg, "Sensor node %d has opened a new connection", data->id);
-                write(fd_write, &write_msg, SIZE);
+                write(fd_write_conn, &write_msg, SIZE);
                 logged = 1;
             }
         }
@@ -67,7 +67,7 @@ void* listenToSocket(void *param) {
     if (result == TCP_CONNECTION_CLOSED) {
         char write_msg[SIZE];
         sprintf(write_msg, "Sensor node %d has closed the connection", data->id);
-        write(fd_write, &write_msg, SIZE);
+        write(fd_write_conn, &write_msg, SIZE);
     } else
         printf("Error occured on connection to peer\n");
     free(data);
