@@ -16,14 +16,14 @@ void* storageManager(void* param) {
     write(fd_write, &open_msg, SIZE);
 
     sensor_data_t * data_db = malloc(sizeof(sensor_data_t));
-    sbuffer_remove(buffer, data_db);
+    int result = sbuffer_remove(buffer, data_db);
 
-    while(data_db->id != 0) {
+    while(result != 1) {
         file = fopen("data.csv", "a");
         insert_sensor(file, data_db, fd_write);
         fclose(file);
 
-        sbuffer_remove(buffer, data_db);
+        result = sbuffer_remove(buffer, data_db);
     }
 
     char close_msg_db[SIZE] = "The data.csv file has been closed.";

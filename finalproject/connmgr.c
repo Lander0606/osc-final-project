@@ -38,15 +38,13 @@ void* connectionManager(void* param) {
     }
     if (tcp_close(&server) != TCP_NO_ERROR) exit(EXIT_FAILURE);
 
-    // TODO: put end of character in buffer
     // Put end of data character in buffer
-    sensor_data_t end_data;
-    end_data.id = 0;
-    end_data.value = 0;
-    end_data.ts = 0;
-    //sbuffer_insert(buffer, &end_data);
-
-    value = end_data.id;
+    sensor_data_t * end_data = malloc(sizeof(sensor_data_t));
+    end_data->id = 0;
+    end_data->value = 0;
+    end_data->ts = 0;
+    sbuffer_insert(buffer, end_data);
+    free(end_data);
 
     // Exit connection thread
     pthread_exit(0);

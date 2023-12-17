@@ -54,9 +54,9 @@ int sbuffer_free(sbuffer_t **buffer) {
 }
 
 int sbuffer_remove(sbuffer_t *buffer, sensor_data_t *data) {
-    sbuffer_node_t *dummy;
     if (buffer == NULL) return SBUFFER_FAILURE;
     pthread_mutex_lock(&mutex);
+    sbuffer_node_t *dummy;
     while (buffer->head == NULL) {
         pthread_cond_wait(&condvar, &mutex);
     }
