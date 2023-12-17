@@ -80,7 +80,7 @@ void* listenToSocket(void *param) {
         write(fd_write, &write_msg_conn, SIZE);
     } else
         printf("Error occured on connection to peer\n");
-    //free(&data_conn);
+    
     tcp_close(&client);
     pthread_exit(0);
 }
