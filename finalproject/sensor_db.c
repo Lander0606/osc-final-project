@@ -7,49 +7,49 @@
 
 void* storageManager(void* param) {
     thread_param * params = param;
-    int fd_write_store = params->fd_write;
+    int fd_write = params->fd_write;
     sbuffer_t * buffer = params->buffer;
 
     FILE * file = fopen("data.csv", "w");
     fclose(file);
     char open_msg[SIZE] = "A new data.csv file has been created.";
-    write(fd_write_store, &open_msg, SIZE);
+    write(fd_write, &open_msg, SIZE);
 
-    sensor_data_t * data = malloc(sizeof(sensor_data_t));
-    sbuffer_remove(buffer, data);
+    sensor_data_t * data_db = malloc(sizeof(sensor_data_t));
+    int result = sbuffer_remove(buffer, data_db);
 
-    while(data->id != 0) {
+    while(result != 1) {
         file = fopen("data.csv", "a");
-        insert_sensor(file, data, fd_write_store);
+        insert_sensor(file, data_db, fd_write);
         fclose(file);
 
-        sbuffer_remove(buffer, data);
+        result = sbuffer_remove(buffer, data_db);
     }
 
-    char close_msg[SIZE] = "The data.csv file has been closed.";
-    write(fd_write_store, &close_msg, SIZE);
-    free(data);
+    char close_msg_db[SIZE] = "The data.csv file has been closed.";
+    write(fd_write, &close_msg_db, SIZE);
+    free(data_db);
     pthread_exit(0);
 }
 
 int insert_sensor(FILE * f, sensor_data_t * data, int fd) {
 
     if(f == NULL) {
-        char write_msg[SIZE] = "Invalid file pointer in storage manager";
-        write(fd, &write_msg, SIZE);
+        char write_msg_db[SIZE] = "Invalid file pointer in storage manager";
+        write(fd, &write_msg_db, SIZE);
         return -1;
     }
 
     int result = fprintf(f, "%d, %f, %ld\n", data->id, data->value, data->ts);
 
     if(result > 0) {
-        char write_msg[SIZE];
-        sprintf(write_msg, "Data insertion from sensor %d succeeded", data->id);
-        write(fd, &write_msg, SIZE);
+        char write_msg_db[SIZE];
+        sprintf(write_msg_db, "Data insertion from sensor %d succeeded", data->id);
+        write(fd, &write_msg_db, SIZE);
     } else {
-        char write_msg[SIZE];
-        sprintf(write_msg, "Data insertion from sensor %d not succeeded: error", data->id);
-        write(fd, &write_msg, SIZE);
+        char write_msg_db[SIZE];
+        sprintf(write_msg_db, "Data insertion from sensor %d not succeeded: error", data->id);
+        write(fd, &write_msg_db, SIZE);
     }
 
     return result;

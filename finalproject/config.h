@@ -1,6 +1,6 @@
 /**
- * \author Lander Van Loock
- */
+* \author Lander Van Loock
+*/
 
 #ifndef _CONFIG_H_
 #define _CONFIG_H_

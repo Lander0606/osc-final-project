@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include "datamgr.h"
 #include "lib/dplist.h"
-#include "config.h"
 #include "sbuffer.h"
 
 dplist_t * nodes = NULL;

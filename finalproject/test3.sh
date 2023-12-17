@@ -2,8 +2,8 @@ make all
 port=5678
 clients=3
 echo -e "starting gateway "
-#./sensor_gateway $port $clients &
-valgrind --leak-check=full --show-leak-kinds=all --trace-children=yes --track-origins=yes ./sensor_gateway $port $clients &
+./sensor_gateway $port $clients &
+#valgrind --leak-check=full --show-leak-kinds=all --trace-children=yes --track-origins=yes ./sensor_gateway $port $clients &
 sleep 3
 echo -e 'starting 3 sensor nodes'
 ./sensor_node 15 1 127.0.0.1 $port &

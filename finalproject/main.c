@@ -55,8 +55,8 @@ int create_log_process() {
     }
     else { // Child process code
 
-        close(fd[WRITE_END]);
         char read_msg[SIZE] = "";
+        close(fd[WRITE_END]);
         long result = read(fd[READ_END], &read_msg, SIZE);
 
         while(result >= 0) {

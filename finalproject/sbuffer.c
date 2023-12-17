@@ -28,7 +28,7 @@ pthread_mutex_t mutex2;
 pthread_cond_t condvar; // Condition variable for when buffer is empty
 pthread_cond_t condvar2; // Condition variable to read data twice
 
-int read = 0; // Condition variable for condvar 2
+int condition = 0; // Condition variable for condvar 2
 
 int sbuffer_init(sbuffer_t **buffer) {
     *buffer = malloc(sizeof(sbuffer_t));
@@ -67,7 +67,7 @@ int sbuffer_remove(sbuffer_t *buffer, sensor_data_t *data) {
     sbuffer_node_t *dummy;
     if (buffer == NULL) return SBUFFER_FAILURE;
     pthread_mutex_lock(&mutex2);
-    while(read == 0) {
+    while(condition == 0) {
         pthread_cond_wait(&condvar2, &mutex2);
     }
     pthread_mutex_lock(&mutex1);
@@ -89,7 +89,7 @@ int sbuffer_remove(sbuffer_t *buffer, sensor_data_t *data) {
     {
         buffer->head = buffer->head->next;
     }
-    read = 0;
+    condition = 0;
     pthread_cond_signal(&condvar2);
     pthread_mutex_unlock(&mutex2);
     pthread_mutex_unlock(&mutex1);
@@ -121,16 +121,16 @@ int sbuffer_insert(sbuffer_t *buffer, sensor_data_t *data) {
 int sbuffer_read(sbuffer_t *buffer, sensor_data_t *data) {
     if (buffer == NULL) return SBUFFER_FAILURE;
     pthread_mutex_lock(&mutex2);
-    while(read == 1) {
+    while(condition == 1) {
         pthread_cond_wait(&condvar2, &mutex2);
     }
-    read = 1;
+    condition = 1;
     pthread_mutex_lock(&mutex1);
     while (buffer->head == NULL) {
         pthread_cond_wait(&condvar, &mutex1);
     }
     if (buffer->head->data.id == 0) {
-        read = 1;
+        condition = 1;
         pthread_cond_signal(&condvar2);
         pthread_mutex_unlock(&mutex2);
         pthread_mutex_unlock(&mutex1);

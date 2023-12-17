@@ -6,7 +6,7 @@
 #include "connmgr.h"
 #include "config.h"
 
-int fd_write_conn;
+int fd_write;
 sbuffer_t * buffer;
 
 void* connectionManager(void* param) {
@@ -16,7 +16,7 @@ void* connectionManager(void* param) {
 
     int MAX_CONN = params->max_conn;
     int PORT = params->port;
-    fd_write_conn = params->fd_write;
+    fd_write = params->fd_write;
     buffer = params->buffer;
 
     tcpsock_t *client[MAX_CONN];
@@ -36,41 +36,51 @@ void* connectionManager(void* param) {
         pthread_join(tid[i], NULL);
     }
     if (tcp_close(&server) != TCP_NO_ERROR) exit(EXIT_FAILURE);
+
+    // Put end of data character in buffer
+    sensor_data_t * end_data = malloc(sizeof(sensor_data_t));
+    end_data->id = 0;
+    end_data->value = 0;
+    end_data->ts = 0;
+    sbuffer_insert(buffer, end_data);
+    free(end_data);
+
+    // Exit connection thread
     pthread_exit(0);
 }
 
 void* listenToSocket(void *param) {
     tcpsock_t *client = param;
-    sensor_data_t * data = malloc(sizeof(sensor_data_t));
+    sensor_data_t data_conn;
     int logged = 0;
     int bytes, result;
     do {
         // read sensor ID
-        bytes = sizeof(data->id);
-        result = tcp_receive(client, (void *) &data->id, &bytes);
+        bytes = sizeof(data_conn.id);
+        result = tcp_receive(client, (void *) &data_conn.id, &bytes);
         // read temperature
-        bytes = sizeof(data->value);
-        result = tcp_receive(client, (void *) &data->value, &bytes);
+        bytes = sizeof(data_conn.value);
+        result = tcp_receive(client, (void *) &data_conn.value, &bytes);
         // read timestamp
-        bytes = sizeof(data->ts);
-        result = tcp_receive(client, (void *) &data->ts, &bytes);
+        bytes = sizeof(data_conn.ts);
+        result = tcp_receive(client, (void *) &data_conn.ts, &bytes);
         if ((result == TCP_NO_ERROR) && bytes) {
-            sbuffer_insert(buffer, data);
             if(logged == 0) {
-                char write_msg[SIZE];
-                sprintf(write_msg, "Sensor node %d has opened a new connection", data->id);
-                write(fd_write_conn, &write_msg, SIZE);
+                char write_msg_conn[SIZE];
+                sprintf(write_msg_conn, "Sensor node %d has opened a new connection", data_conn.id);
+                write(fd_write, &write_msg_conn, SIZE);
                 logged = 1;
             }
+            sbuffer_insert(buffer, &data_conn);
         }
     } while (result == TCP_NO_ERROR);
     if (result == TCP_CONNECTION_CLOSED) {
-        char write_msg[SIZE];
-        sprintf(write_msg, "Sensor node %d has closed the connection", data->id);
-        write(fd_write_conn, &write_msg, SIZE);
+        char write_msg_conn[SIZE];
+        sprintf(write_msg_conn, "Sensor node %d has closed the connection", data_conn.id);
+        write(fd_write, &write_msg_conn, SIZE);
     } else
         printf("Error occured on connection to peer\n");
-    free(data);
+    
     tcp_close(&client);
     pthread_exit(0);
 }
