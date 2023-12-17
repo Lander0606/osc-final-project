@@ -53,4 +53,8 @@ dkms.conf
 
 *.log
 *.zip
-.idea/*
+.idea/
+
+sensor_gateway
+sensor_node
+file_creator
