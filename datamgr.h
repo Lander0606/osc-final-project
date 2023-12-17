@@ -22,11 +22,3 @@ sensor_node * get_node_by_sensor_id(sensor_id_t sensor_id);
 void datamgr_parse_sensor_files(FILE *fp_sensor_map, sbuffer_t * buffer, int fd);
 
 void datamgr_free();
-
-uint16_t datamgr_get_room_id(sensor_id_t sensor_id);
-
-sensor_value_t datamgr_get_avg(sensor_id_t sensor_id);
-
-time_t datamgr_get_last_modified(sensor_id_t sensor_id);
-
-int datamgr_get_total_sensors();

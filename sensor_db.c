@@ -1,3 +1,7 @@
+/**
+ * \author Lander Van Loock
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -10,6 +14,7 @@ void* storageManager(void* param) {
     int fd_write = params->fd_write;
     sbuffer_t * buffer = params->buffer;
 
+    // Create empty database file
     FILE * file = fopen("data.csv", "w");
     fclose(file);
     char open_msg[SIZE] = "A new data.csv file has been created.";
@@ -43,11 +48,11 @@ int insert_sensor(FILE * f, sensor_data_t * data, int fd) {
     int result = fprintf(f, "%d, %f, %ld\n", data->id, data->value, data->ts);
 
     if(result > 0) {
-        char write_msg_db[SIZE];
+        char write_msg_db[SIZE] = "";
         sprintf(write_msg_db, "Data insertion from sensor %d succeeded", data->id);
         write(fd, &write_msg_db, SIZE);
     } else {
-        char write_msg_db[SIZE];
+        char write_msg_db[SIZE] = "";
         sprintf(write_msg_db, "Data insertion from sensor %d not succeeded: error", data->id);
         write(fd, &write_msg_db, SIZE);
     }

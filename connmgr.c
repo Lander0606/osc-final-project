@@ -1,3 +1,7 @@
+/**
+ * \author Lander Van Loock
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -6,7 +10,7 @@
 #include "connmgr.h"
 #include "config.h"
 
-int fd_write;
+int fd_write_conn;
 sbuffer_t * buffer;
 
 void* connectionManager(void* param) {
@@ -16,11 +20,12 @@ void* connectionManager(void* param) {
 
     int MAX_CONN = params->max_conn;
     int PORT = params->port;
-    fd_write = params->fd_write;
+    fd_write_conn = params->fd_write;
     buffer = params->buffer;
 
     tcpsock_t *client[MAX_CONN];
 
+    // Connection threads initialization
     pthread_t tid[MAX_CONN];
     pthread_attr_t attr;
     pthread_attr_init(&attr);
@@ -66,9 +71,9 @@ void* listenToSocket(void *param) {
         result = tcp_receive(client, (void *) &data_conn.ts, &bytes);
         if ((result == TCP_NO_ERROR) && bytes) {
             if(logged == 0) {
-                char write_msg_conn[SIZE];
+                char write_msg_conn[SIZE] = "";
                 sprintf(write_msg_conn, "Sensor node %d has opened a new connection", data_conn.id);
-                write(fd_write, &write_msg_conn, SIZE);
+                write(fd_write_conn, &write_msg_conn, SIZE);
                 logged = 1;
             }
             sbuffer_insert(buffer, &data_conn);
@@ -77,7 +82,7 @@ void* listenToSocket(void *param) {
     if (result == TCP_CONNECTION_CLOSED) {
         char write_msg_conn[SIZE];
         sprintf(write_msg_conn, "Sensor node %d has closed the connection", data_conn.id);
-        write(fd_write, &write_msg_conn, SIZE);
+        write(fd_write_conn, &write_msg_conn, SIZE);
     } else
         printf("Error occured on connection to peer\n");
     

@@ -1,3 +1,7 @@
+/**
+ * \author Lander Van Loock
+ */
+
 #include <pthread.h>
 #include <malloc.h>
 #include <unistd.h>
@@ -6,20 +10,6 @@
 #include "sbuffer.h"
 
 dplist_t * nodes = NULL;
-
-void* dataManager(void* param) {
-    thread_param * params = param;
-    int fd_write_data = params->fd_write;
-    sbuffer_t * buffer = params->buffer;
-
-    FILE * map = fopen("room_sensor.map", "r");
-    datamgr_parse_sensor_files(map, buffer, fd_write_data);
-    fclose(map);
-
-    datamgr_free();
-
-    pthread_exit(0);
-}
 
 void * element_copy(void * element) {
     sensor_node * copy = malloc(sizeof (sensor_node));
@@ -43,6 +33,19 @@ int element_compare(void * x, void * y) {
     return ((((sensor_node *)x)->sensor_id < ((sensor_node *)y)->sensor_id) ? -1 : (((sensor_node *)x)->sensor_id == ((sensor_node *)y)->sensor_id) ? 0 : 1);
 }
 
+void* dataManager(void* param) {
+    thread_param * params = param;
+    int fd_write_data = params->fd_write;
+    sbuffer_t * buffer = params->buffer;
+
+    FILE * map = fopen("room_sensor.map", "r");
+    datamgr_parse_sensor_files(map, buffer, fd_write_data);
+
+    datamgr_free();
+
+    pthread_exit(0);
+}
+
 void datamgr_parse_sensor_files(FILE *fp_sensor_map, sbuffer_t * buffer, int fd) {
     nodes =  dpl_create(element_copy, element_free, element_compare);
 
@@ -62,11 +65,12 @@ void datamgr_parse_sensor_files(FILE *fp_sensor_map, sbuffer_t * buffer, int fd)
         dpl_insert_at_index(nodes, sensor, index, false);
         ++index;
     }
+    fclose(fp_sensor_map);
 
     sensor_data_t * data = malloc(sizeof(sensor_data_t));
-    sbuffer_read(buffer, data);
+    int result = sbuffer_read(buffer, data);
 
-    while (data->id != 0) {
+    while (result != 1) {
         sensor_id = data->id;
         temperature = data->value;
         timestamp = data->ts;
@@ -83,11 +87,11 @@ void datamgr_parse_sensor_files(FILE *fp_sensor_map, sbuffer_t * buffer, int fd)
                     sum += node->sensor_data[n];
                 node->running_avg = sum / RUN_AVG_LENGTH;
                 if (node->running_avg > SET_MAX_TEMP) {
-                    char write_msg[SIZE];
+                    char write_msg[SIZE] = "";
                     sprintf(write_msg, "Sensor node %d reports it’s too cold (avg temp = %f)", node->sensor_id, node->running_avg);
                     write(fd, &write_msg, SIZE);
                 } else if (node->running_avg < SET_MIN_TEMP) {
-                    char write_msg[SIZE];
+                    char write_msg[SIZE] = "";
                     sprintf(write_msg, "Sensor node %d reports it’s too hot (avg temp = %f)", node->sensor_id, node->running_avg);
                     write(fd, &write_msg, SIZE);
                 }
@@ -97,15 +101,19 @@ void datamgr_parse_sensor_files(FILE *fp_sensor_map, sbuffer_t * buffer, int fd)
                 node->data_counter = 0;
             else
                 ++node->data_counter;
+        } else {
+            char write_msg[SIZE] = "";
+            sprintf(write_msg, "Received sensor data with invalid sensor node ID %d", sensor_id);
+            write(fd, &write_msg, SIZE);
         }
-        sbuffer_read(buffer, data);
+        result = sbuffer_read(buffer, data);
     }
     free(data);
 }
 
 void datamgr_free() {
     if(nodes != NULL) {
-        dpl_free(&nodes, false);
+        dpl_free(&nodes, true);
     }
 }
 
@@ -116,7 +124,6 @@ sensor_node * get_node_by_sensor_id(sensor_id_t sensor_id) {
         int index = dpl_get_index_of_element(nodes, node);
         free(node);
         if(index < 0) {
-            printf("Error: No sensor in nodes list with id %d\n", sensor_id);
             return NULL;
         }
         return (sensor_node * )dpl_get_element_at_index(nodes, index);

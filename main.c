@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include "connmgr.h"
 #include "datamgr.h"
@@ -45,21 +46,22 @@ int create_log_process() {
         return -1;
     }
     pid = fork();
-    if (pid < 0) { // Child process creation error
+    if (pid < 0) {
         write_to_log_process("Error while creating child process.");
         return -1;
     }
+
     if (pid > 0) { // Parent process code
         close(fd[READ_END]);
         return 0;
     }
     else { // Child process code
 
-        char read_msg[SIZE] = "";
         close(fd[WRITE_END]);
+        char read_msg[SIZE] = "";
         long result = read(fd[READ_END], &read_msg, SIZE);
 
-        while(result >= 0) {
+        while(strcmp(read_msg, "end") != 0) {
             if(result>0)
                 write_to_log_process(read_msg);
             result = read(fd[READ_END], &read_msg, SIZE);
@@ -73,7 +75,7 @@ int main(int argc, char *argv[]) {
 
     // Check arguments for connection manager
     if(argc < 3) {
-        printf("Please provide the right arguments: first the port, then the max nb of clients");
+        printf("Please provide the right arguments: first the port, then the max number of clients");
         return -1;
     }
 
@@ -82,7 +84,9 @@ int main(int argc, char *argv[]) {
     fclose(f);
 
     // Create log process
-    create_log_process();
+    if (create_log_process() != 0) {
+        exit(EXIT_FAILURE);
+    }
 
     // Thread initialization
     pthread_t tid[3];
@@ -93,7 +97,7 @@ int main(int argc, char *argv[]) {
     sbuffer_t * buffer = NULL;
     sbuffer_init(&buffer);
 
-    // Connection manager parameter initialization
+    // Connection manager thread initialization
     conn_param * params = malloc(sizeof(conn_param));
     params->port = atoi(argv[1]);
     params->max_conn = atoi(argv[2]);
@@ -105,7 +109,7 @@ int main(int argc, char *argv[]) {
     th_params->buffer = buffer;
     th_params->fd_write = fd[WRITE_END];
 
-    // Create necessary threads
+    // Create connection, storage and data manager threads
     pthread_create(&tid[0], &attr, connectionManager, params);
     pthread_create(&tid[1], &attr, dataManager, th_params);
     pthread_create(&tid[2], &attr, storageManager, th_params);
@@ -120,7 +124,13 @@ int main(int argc, char *argv[]) {
     free(params);
     free(th_params);
 
+    // End the log process
+    char write_msg[SIZE] = "end";
+    write(fd[WRITE_END], &write_msg, SIZE);
     close(fd[WRITE_END]);
+
+    // Wait for the log process to end
+    wait(NULL);
 
     return 0;
 }
