@@ -8,7 +8,6 @@
 
 int fd_write;
 sbuffer_t * buffer;
-int value;
 
 void* connectionManager(void* param) {
     tcpsock_t *server;

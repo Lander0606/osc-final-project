@@ -1,9 +1,21 @@
 /**
- * \author {AUTHOR}
- */
+* \author Lander Van Loock
+*/
 
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
+
+#ifndef RUN_AVG_LENGTH
+#define RUN_AVG_LENGTH 5
+#endif
+
+#ifndef SET_MAX_TEMP
+#define SET_MAX_TEMP 20
+#endif
+
+#ifndef SET_MIN_TEMP
+#define SET_MIN_TEMP 10
+#endif
 
 #include <stdint.h>
 #include <time.h>
