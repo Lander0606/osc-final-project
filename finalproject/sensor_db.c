@@ -11,6 +11,7 @@ void* storageManager(void* param) {
     sbuffer_t * buffer = params->buffer;
 
     FILE * file = fopen("data.csv", "w");
+    fclose(file);
     char open_msg[SIZE] = "A new data.csv file has been created.";
     write(fd_write, &open_msg, SIZE);
 
@@ -25,7 +26,6 @@ void* storageManager(void* param) {
         sbuffer_remove(buffer, data);
     }
 
-    fclose(file);
     char close_msg[SIZE] = "The data.csv file has been closed.";
     write(fd_write, &close_msg, SIZE);
     free(data);

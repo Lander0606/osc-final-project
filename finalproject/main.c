@@ -57,7 +57,7 @@ int create_log_process() {
 
         char read_msg[SIZE] = "";
         close(fd[WRITE_END]);
-        int result = read(fd[READ_END], &read_msg, SIZE);
+        long result = read(fd[READ_END], &read_msg, SIZE);
 
         while(result >= 0) {
             if(result>0)
@@ -116,6 +116,7 @@ int main(int argc, char *argv[]) {
     pthread_join(tid[2], NULL);
 
     // Free all the memory
+    sbuffer_free(&buffer);
     free(params);
     free(th_params);
 

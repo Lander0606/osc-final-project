@@ -36,6 +36,14 @@ void* connectionManager(void* param) {
         pthread_join(tid[i], NULL);
     }
     if (tcp_close(&server) != TCP_NO_ERROR) exit(EXIT_FAILURE);
+
+    // Put end of data character in buffer
+    sensor_data_t * end_data = malloc(sizeof(sensor_data_t));
+    end_data->id = 0;
+    sbuffer_insert(buffer, end_data);
+    free(end_data);
+
+    // Exit connection thread
     pthread_exit(0);
 }
 
