@@ -57,15 +57,22 @@ void* connectionManager(void* param) {
 void* listenToSocket(void *param) {
     tcpsock_t *client = param;
     sensor_data_t data_conn;
+    tcp_set_socket_timeout(client, TIMEOUT);
     int logged = 0;
     int bytes, result;
     do {
         // read sensor ID
         bytes = sizeof(data_conn.id);
         result = tcp_receive(client, (void *) &data_conn.id, &bytes);
+        if(result == TCP_TIMEOUT) {
+            break;
+        }
         // read temperature
         bytes = sizeof(data_conn.value);
         result = tcp_receive(client, (void *) &data_conn.value, &bytes);
+        if(result == TCP_TIMEOUT) {
+            break;
+        }
         // read timestamp
         bytes = sizeof(data_conn.ts);
         result = tcp_receive(client, (void *) &data_conn.ts, &bytes);
@@ -80,11 +87,17 @@ void* listenToSocket(void *param) {
         }
     } while (result == TCP_NO_ERROR);
     if (result == TCP_CONNECTION_CLOSED) {
-        char write_msg_conn[SIZE];
+        char write_msg_conn[SIZE] = "";
         sprintf(write_msg_conn, "Sensor node %d has closed the connection", data_conn.id);
         write(fd_write_conn, &write_msg_conn, SIZE);
-    } else
-        printf("Error occured on connection to peer\n");
+    } else if(result == TCP_TIMEOUT) {
+        char write_msg_conn[SIZE] = "";
+        sprintf(write_msg_conn, "Timeout from sensor node %d, connection closed", data_conn.id);
+        write(fd_write_conn, &write_msg_conn, SIZE);
+    } else {
+        char write_msg_conn[SIZE] = "Error while connecting to peer";
+        write(fd_write_conn, &write_msg_conn, SIZE);
+    }
     
     tcp_close(&client);
     pthread_exit(0);

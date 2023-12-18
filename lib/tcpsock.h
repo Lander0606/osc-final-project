@@ -14,6 +14,7 @@
 #define    TCP_SOCKOP_ERROR         3   // socket operator (socket, listen, bind, accept,...) error
 #define    TCP_CONNECTION_CLOSED    4   // send/receive indicate connection is closed
 #define    TCP_MEMORY_ERROR         5   // mem alloc error
+#define    TCP_TIMEOUT              6   // timeout error
 
 #define MAX_PENDING 10
 
@@ -95,6 +96,8 @@ int tcp_send(tcpsock_t *socket, void *buffer, int *buf_size);
  * \return TCP_NO_ERROR if no error occurs during execution
  */
 int tcp_receive(tcpsock_t *socket, void *buffer, int *buf_size);
+
+int tcp_set_socket_timeout(tcpsock_t *socket, int timeout);
 
 /**
  * Set '*ip_addr' to the IP address of 'socket' (could be NULL if the IP address is not set)

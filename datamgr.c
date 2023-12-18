@@ -88,11 +88,11 @@ void datamgr_parse_sensor_files(FILE *fp_sensor_map, sbuffer_t * buffer, int fd)
                 node->running_avg = sum / RUN_AVG_LENGTH;
                 if (node->running_avg > SET_MAX_TEMP) {
                     char write_msg[SIZE] = "";
-                    sprintf(write_msg, "Sensor node %d reports it’s too cold (avg temp = %f)", node->sensor_id, node->running_avg);
+                    sprintf(write_msg, "Sensor node %d reports it’s too hot (avg temp = %f)", node->sensor_id, node->running_avg);
                     write(fd, &write_msg, SIZE);
                 } else if (node->running_avg < SET_MIN_TEMP) {
                     char write_msg[SIZE] = "";
-                    sprintf(write_msg, "Sensor node %d reports it’s too hot (avg temp = %f)", node->sensor_id, node->running_avg);
+                    sprintf(write_msg, "Sensor node %d reports it’s too cold (avg temp = %f)", node->sensor_id, node->running_avg);
                     write(fd, &write_msg, SIZE);
                 }
             }
