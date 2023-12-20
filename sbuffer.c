@@ -1,34 +1,24 @@
-/**
- * \author Lander Van Loock
- */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include "sbuffer.h"
 
-/**
- * basic node for the buffer, these nodes are linked together to create the buffer
- */
 typedef struct sbuffer_node {
-    struct sbuffer_node *next;  /**< a pointer to the next node*/
-    sensor_data_t data;         /**< a structure containing the data */
+    struct sbuffer_node *next;
+    sensor_data_t data;
 } sbuffer_node_t;
 
-/**
- * a structure to keep track of the buffer
- */
 struct sbuffer {
-    sbuffer_node_t *head;       /**< a pointer to the first node in the buffer */
-    sbuffer_node_t *tail;       /**< a pointer to the last node in the buffer */
+    sbuffer_node_t *head;
+    sbuffer_node_t *tail;
 };
 
-pthread_mutex_t mutex1;
-pthread_mutex_t mutex2;
+pthread_mutex_t mutex1; // Mutex for storage access
+pthread_mutex_t mutex2; // Mutex to let data manager and storage manager read both
 pthread_cond_t condvar; // Condition variable for when buffer is empty
 pthread_cond_t condvar2; // Condition variable to read data twice
 
-int condition = 0; // Condition variable for condvar 2
+int condition = 0; // Variable for condvar 2
 
 int sbuffer_init(sbuffer_t **buffer) {
     *buffer = malloc(sizeof(sbuffer_t));
@@ -105,7 +95,7 @@ int sbuffer_insert(sbuffer_t *buffer, sensor_data_t *data) {
     dummy->data = *data;
     dummy->next = NULL;
     pthread_mutex_lock(&mutex1);
-    if (buffer->tail == NULL) // buffer empty (buffer->head should also be NULL
+    if (buffer->tail == NULL) // buffer empty
     {
         buffer->head = buffer->tail = dummy;
     } else // buffer not empty

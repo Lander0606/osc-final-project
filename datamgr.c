@@ -1,7 +1,3 @@
-/**
- * \author Lander Van Loock
- */
-
 #include <pthread.h>
 #include <malloc.h>
 #include <unistd.h>
@@ -11,6 +7,7 @@
 
 dplist_t * nodes = NULL;
 
+// Define callback functions for dplist
 void * element_copy(void * element) {
     sensor_node * copy = malloc(sizeof (sensor_node));
     if(copy != NULL) {
@@ -33,6 +30,8 @@ int element_compare(void * x, void * y) {
     return ((((sensor_node *)x)->sensor_id < ((sensor_node *)y)->sensor_id) ? -1 : (((sensor_node *)x)->sensor_id == ((sensor_node *)y)->sensor_id) ? 0 : 1);
 }
 
+
+// Main function for the data-manager thread
 void* dataManager(void* param) {
     thread_param * params = param;
     int fd_write_data = params->fd_write;

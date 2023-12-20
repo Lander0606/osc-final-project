@@ -1,7 +1,3 @@
-/**
- * \author Lander Van Loock
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>

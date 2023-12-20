@@ -11,14 +11,14 @@ typedef struct {
     double sensor_data[RUN_AVG_LENGTH];
 } sensor_node;
 
-void* dataManager(void* param);
-
 void * element_copy(void * element);
 void element_free(void ** element);
 int element_compare(void * x, void * y);
 
-sensor_node * get_node_by_sensor_id(sensor_id_t sensor_id);
+void* dataManager(void* param);
 
 void datamgr_parse_sensor_files(FILE *fp_sensor_map, sbuffer_t * buffer, int fd);
 
 void datamgr_free();
+
+sensor_node * get_node_by_sensor_id(sensor_id_t sensor_id);
